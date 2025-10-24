@@ -1,41 +1,42 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
 trigger:
 - main
 
-pool:
-  name: windows-pc 
+pool: windows-pc
 
 variables:
+  solution: '*/.sln'
+  proyecto: '*/.csproj'
+  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  solution: 'SkyNetApi.sln'               
-  webProject: 'SkyNetApi/SkyNetApi.csproj' 
 
 steps:
+
 - task: UseDotNet@2
+  displayName: 'Instalar .NET '
   inputs:
     packageType: 'sdk'
-    version: '9.0.x'       
+    version: '9.0.x'
 
-- script: dotnet restore "$(solution)"
-  displayName: 'dotnet restore'
+- task: NuGetToolInstaller@1
 
-- script: dotnet build "$(solution)" -c "$(buildConfiguration)" --no-restore
-  displayName: 'dotnet build'
-
-- script: dotnet test "$(solution)" -c "$(buildConfiguration)" --no-build --logger trx
-  displayName: 'dotnet test'
-  continueOnError: true       
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
 
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet publish'
+  displayName: 'Construyendo los artefactos...'
   inputs:
     command: 'publish'
     publishWebProjects: false
-    projects: '$(webProject)'
-    arguments: '-c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)'
+    projects: $(proyecto)
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory) --runtime win-x86 --self-contained'
     zipAfterPublish: false
+    modifyOutputPath: false
 
 - task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+  displayName: 'Publicando los artefactos'
