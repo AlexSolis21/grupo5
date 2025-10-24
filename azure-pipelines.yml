@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  name: SelfHosted-Local   
+  name: windows-pc 
 
 variables:
   buildConfiguration: 'Release'
